@@ -183,5 +183,17 @@
       "admin/",
       "packages/"
     ]
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/core": "^2.7.1",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.217.0",
+    "@opentelemetry/sdk-trace-base": "^2.7.1",
+    "@react-spring/web": "^10.0.3",
+    "framer-motion": "^11.18.2",
+    "react-window": "^1.8.10",
+    "smob": "^1.6.1",
+    "terser": "^5.47.1",
+    "winston-daily-rotate-file": "^5.0.0"
   }
 }
