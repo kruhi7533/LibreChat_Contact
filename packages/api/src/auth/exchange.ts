@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { Keyv } from 'keyv';
+import Keyv from 'keyv';
 import { logger } from '@librechat/data-schemas';
 import type { IUser } from '@librechat/data-schemas';
 
