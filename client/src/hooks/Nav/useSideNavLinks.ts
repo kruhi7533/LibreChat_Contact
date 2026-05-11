@@ -17,6 +17,7 @@ import {
   isAgentsEndpoint,
   isAssistantsEndpoint,
 } from 'librechat-data-provider';
+import { Users } from 'lucide-react';
 import type { TInterfaceConfig, TEndpointsConfig } from 'librechat-data-provider';
 import type { NavLink } from '~/common';
 import {
@@ -169,6 +170,20 @@ export default function useSideNavLinks({
         Component: BookmarkPanel,
       });
     }
+
+    // Add a quick link to open the Contacts page in the main app.
+    // This is intentionally an onClick navigation because Contacts is a full-page
+    // route rather than a side-panel component.
+    links.push({
+      title: 'com_ui_contacts',
+      label: '',
+      icon: Users,
+      id: 'contacts',
+      onClick: () => {
+        // Use a full navigation so the route loader runs normally.
+        window.location.href = '/contacts';
+      },
+    });
 
     links.push({
       title: 'com_sidepanel_attach_files',
