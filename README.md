@@ -1,225 +1,181 @@
-<p align="center">
-  <a href="https://librechat.ai">
-    <img src="client/public/assets/logo.svg" height="256">
-  </a>
-  <h1 align="center">
-    <a href="https://librechat.ai">LibreChat</a>
-  </h1>
-</p>
+# LibreChat — Contacts Workspace Integration
 
-<p align="center">
-  <strong>English</strong> ·
-  <a href="README.zh.md">中文</a>
-</p>
+> **Assignment submission.** This repository is a fork of [LibreChat](https://github.com/danny-avila/LibreChat) extended with a **Contacts** feature. Users can store contacts (with arbitrary attributes), bulk-import from CSV, and ask the AI assistant questions about them in normal chat. The assistant only sees contacts relevant to the query — never the entire list.
 
-<p align="center">
-  <a href="https://discord.librechat.ai"> 
-    <img
-      src="https://img.shields.io/discord/1086345563026489514?label=&logo=discord&style=for-the-badge&logoWidth=20&logoColor=white&labelColor=000000&color=blueviolet">
-  </a>
-  <a href="https://www.youtube.com/@LibreChat"> 
-    <img
-      src="https://img.shields.io/badge/YOUTUBE-red.svg?style=for-the-badge&logo=youtube&logoColor=white&labelColor=000000&logoWidth=20">
-  </a>
-  <a href="https://docs.librechat.ai"> 
-    <img
-      src="https://img.shields.io/badge/DOCS-blue.svg?style=for-the-badge&logo=read-the-docs&logoColor=white&labelColor=000000&logoWidth=20">
-  </a>
-  <a aria-label="Sponsors" href="https://github.com/sponsors/danny-avila">
-    <img
-      src="https://img.shields.io/badge/SPONSORS-brightgreen.svg?style=for-the-badge&logo=github-sponsors&logoColor=white&labelColor=000000&logoWidth=20">
-  </a>
-</p>
-
-<p align="center">
-<a href="https://railway.com/deploy/librechat-official?referralCode=HI9hWz&utm_medium=integration&utm_source=readme&utm_campaign=librechat">
-  <img src="https://railway.com/button.svg" alt="Deploy on Railway" height="30">
-</a>
-<a href="https://zeabur.com/templates/0X2ZY8">
-  <img src="https://zeabur.com/button.svg" alt="Deploy on Zeabur" height="30"/>
-</a>
-<a href="https://template.cloud.sealos.io/deploy?templateName=librechat">
-  <img src="https://raw.githubusercontent.com/labring-actions/templates/main/Deploy-on-Sealos.svg" alt="Deploy on Sealos" height="30">
-</a>
-</p>
-
-<p align="center">
-  <a href="https://www.librechat.ai/docs/translation">
-    <img 
-      src="https://img.shields.io/badge/dynamic/json.svg?style=for-the-badge&color=2096F3&label=locize&query=%24.translatedPercentage&url=https://api.locize.app/badgedata/4cb2598b-ed4d-469c-9b04-2ed531a8cb45&suffix=%+translated" 
-      alt="Translation Progress">
-  </a>
-</p>
-
-
-# ✨ Features
-
-- 🖥️ **UI & Experience** inspired by ChatGPT with enhanced design and features
-
-- 🤖 **AI Model Selection**:  
-  - Anthropic (Claude), AWS Bedrock, OpenAI, Azure OpenAI, Google, Vertex AI, OpenAI Responses API (incl. Azure)
-  - [Custom Endpoints](https://www.librechat.ai/docs/quick_start/custom_endpoints): Use any OpenAI-compatible API with LibreChat, no proxy required
-  - Compatible with [Local & Remote AI Providers](https://www.librechat.ai/docs/configuration/librechat_yaml/ai_endpoints):
-    - Ollama, groq, Cohere, Mistral AI, Apple MLX, koboldcpp, together.ai,
-    - OpenRouter, Helicone, Perplexity, ShuttleAI, Deepseek, Qwen, and more
-
-- 🔧 **[Code Interpreter API](https://www.librechat.ai/docs/features/code_interpreter)**: 
-  - Secure, Sandboxed Execution in Python, Node.js (JS/TS), Go, C/C++, Java, PHP, Rust, and Fortran
-  - Seamless File Handling: Upload, process, and download files directly
-  - No Privacy Concerns: Fully isolated and secure execution
-
-- 🔦 **Agents & Tools Integration**:  
-  - **[LibreChat Agents](https://www.librechat.ai/docs/features/agents)**:
-    - No-Code Custom Assistants: Build specialized, AI-driven helpers
-    - Agent Marketplace: Discover and deploy community-built agents
-    - Collaborative Sharing: Share agents with specific users and groups
-    - Flexible & Extensible: Use MCP Servers, tools, file search, code execution, and more
-    - Compatible with Custom Endpoints, OpenAI, Azure, Anthropic, AWS Bedrock, Google, Vertex AI, Responses API, and more
-    - [Model Context Protocol (MCP) Support](https://modelcontextprotocol.io/clients#librechat) for Tools
-
-- 🔍 **Web Search**:  
-  - Search the internet and retrieve relevant information to enhance your AI context
-  - Combines search providers, content scrapers, and result rerankers for optimal results
-  - **Customizable Jina Reranking**: Configure custom Jina API URLs for reranking services
-  - **[Learn More →](https://www.librechat.ai/docs/features/web_search)**
-
-- 🪄 **Generative UI with Code Artifacts**:  
-  - [Code Artifacts](https://youtu.be/GfTj7O4gmd0?si=WJbdnemZpJzBrJo3) allow creation of React, HTML, and Mermaid diagrams directly in chat
-
-- 🎨 **Image Generation & Editing**
-  - Text-to-image and image-to-image with [GPT-Image-1](https://www.librechat.ai/docs/features/image_gen#1--openai-image-tools-recommended)
-  - Text-to-image with [DALL-E (3/2)](https://www.librechat.ai/docs/features/image_gen#2--dalle-legacy), [Stable Diffusion](https://www.librechat.ai/docs/features/image_gen#3--stable-diffusion-local), [Flux](https://www.librechat.ai/docs/features/image_gen#4--flux), or any [MCP server](https://www.librechat.ai/docs/features/image_gen#5--model-context-protocol-mcp)
-  - Produce stunning visuals from prompts or refine existing images with a single instruction
-
-- 💾 **Presets & Context Management**:  
-  - Create, Save, & Share Custom Presets  
-  - Switch between AI Endpoints and Presets mid-chat
-  - Edit, Resubmit, and Continue Messages with Conversation branching  
-  - Create and share prompts with specific users and groups
-  - [Fork Messages & Conversations](https://www.librechat.ai/docs/features/fork) for Advanced Context control
-
-- 💬 **Multimodal & File Interactions**:  
-  - Upload and analyze images with Claude 3, GPT-4.5, GPT-4o, o1, Llama-Vision, and Gemini 📸  
-  - Chat with Files using Custom Endpoints, OpenAI, Azure, Anthropic, AWS Bedrock, & Google 🗃️
-
-- 🌎 **Multilingual UI**:
-  - English, 中文 (简体), 中文 (繁體), العربية, Deutsch, Español, Français, Italiano
-  - Polski, Português (PT), Português (BR), Русский, 日本語, Svenska, 한국어, Tiếng Việt
-  - Türkçe, Nederlands, עברית, Català, Čeština, Dansk, Eesti, فارسی
-  - Suomi, Magyar, Հայերեն, Bahasa Indonesia, ქართული, Latviešu, ไทย, ئۇيغۇرچە
-
-- 🧠 **Reasoning UI**:  
-  - Dynamic Reasoning UI for Chain-of-Thought/Reasoning AI models like DeepSeek-R1
-
-- 🎨 **Customizable Interface**:  
-  - Customizable Dropdown & Interface that adapts to both power users and newcomers
-
-- 🌊 **[Resumable Streams](https://www.librechat.ai/docs/features/resumable_streams)**:  
-  - Never lose a response: AI responses automatically reconnect and resume if your connection drops
-  - Multi-Tab & Multi-Device Sync: Open the same chat in multiple tabs or pick up on another device
-  - Production-Ready: Works from single-server setups to horizontally scaled deployments with Redis
-
-- 🗣️ **Speech & Audio**:  
-  - Chat hands-free with Speech-to-Text and Text-to-Speech  
-  - Automatically send and play Audio  
-  - Supports OpenAI, Azure OpenAI, and Elevenlabs
-
-- 📥 **Import & Export Conversations**:  
-  - Import Conversations from LibreChat, ChatGPT, Chatbot UI  
-  - Export conversations as screenshots, markdown, text, json
-
-- 🔍 **Search & Discovery**:  
-  - Search all messages/conversations
-
-- 👥 **Multi-User & Secure Access**:
-  - Multi-User, Secure Authentication with OAuth2, LDAP, & Email Login Support
-  - Built-in Moderation, and Token spend tools
-
-- ⚙️ **Configuration & Deployment**:  
-  - Configure Proxy, Reverse Proxy, Docker, & many Deployment options  
-  - Use completely local or deploy on the cloud
-
-- 📖 **Open-Source & Community**:  
-  - Completely Open-Source & Built in Public  
-  - Community-driven development, support, and feedback
-
-[For a thorough review of our features, see our docs here](https://docs.librechat.ai/) 📚
-
-## 🪶 All-In-One AI Conversations with LibreChat
-
-LibreChat is a self-hosted AI chat platform that unifies all major AI providers in a single, privacy-focused interface.
-
-Beyond chat, LibreChat provides AI Agents, Model Context Protocol (MCP) support, Artifacts, Code Interpreter, custom actions, conversation search, and enterprise-ready multi-user authentication.
-
-Open source, actively developed, and built for anyone who values control over their AI infrastructure.
+For the original LibreChat documentation, see the [upstream README](https://github.com/danny-avila/LibreChat/blob/main/README.md). The detailed design write-up for this feature lives in [CONTACTS_FEATURE.md](CONTACTS_FEATURE.md).
 
 ---
 
-## 🌐 Resources
+## What was implemented
 
-**GitHub Repo:**
-  - **RAG API:** [github.com/danny-avila/rag_api](https://github.com/danny-avila/rag_api)
-  - **Website:** [github.com/LibreChat-AI/librechat.ai](https://github.com/LibreChat-AI/librechat.ai)
+### Core requirements
 
-**Other:**
-  - **Website:** [librechat.ai](https://librechat.ai)
-  - **Documentation:** [librechat.ai/docs](https://librechat.ai/docs)
-  - **Blog:** [librechat.ai/blog](https://librechat.ai/blog)
+- **Contact data model** — core fields (`name`, `company`, `role`, `email`, `notes`, `createdAt`) plus an `attributes` map for arbitrary key/value metadata (Industry, Location, Funding Stage, Tags, …) without schema migrations.
+- **Bulk CSV import** — streaming parser + batched `bulkWrite` to ingest the provided datasets (1k / 10k / 1M rows) with constant memory.
+- **Contacts UI** — dedicated page at `/contacts` to list, view, create, and import contacts, including arbitrary attributes.
+- **Chat integration** — a `search_contacts` LLM tool that the assistant calls during normal chat to fetch only the contacts relevant to the user's query.
+- **Tenant isolation** — every read/write is scoped to the authenticated user; the LLM tool cannot leak data across users.
 
----
+### Extra-credit / bonus
 
-## 📝 Changelog
+- **Relevance-based retrieval** — the model receives at most ~20 narrowly-matched records (structured filters + free-text fallback), not the whole table.
+- **Contact search** via Mongo `$text` index plus regex fallback for partial tokens.
+- **Tool exposed via LibreChat's Agent system** — provider-agnostic; tested with the assignment's Google/Gemini key.
 
-Keep up with the latest updates by visiting the releases page and notes:
-- [Releases](https://github.com/danny-avila/LibreChat/releases)
-- [Changelog](https://www.librechat.ai/changelog) 
+### Files added
 
-**⚠️ Please consult the [changelog](https://www.librechat.ai/changelog) for breaking changes before updating.**
+**Backend (`/api`)**
 
----
+- [api/models/Contact.js](api/models/Contact.js) — Mongoose schema, indexes, `searchText` denormalization hook
+- [api/server/services/Contacts/service.js](api/server/services/Contacts/service.js) — CRUD + tenant-scoped search
+- [api/server/services/Contacts/csv.js](api/server/services/Contacts/csv.js) — streaming CSV parser (no new deps; handles BOM, CRLF, quoted fields)
+- [api/server/services/Contacts/import.js](api/server/services/Contacts/import.js) — streaming bulk import
+- [api/server/controllers/ContactController.js](api/server/controllers/ContactController.js) — Express handlers
+- [api/server/routes/contacts.js](api/server/routes/contacts.js) — REST routes + multer upload
+- [api/app/clients/tools/structured/SearchContacts.js](api/app/clients/tools/structured/SearchContacts.js) — LangChain Tool for chat integration
 
-## ⭐ Star History
+**Frontend (`/client`)**
 
-<p align="center">
-  <a href="https://star-history.com/#danny-avila/LibreChat&Date">
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=danny-avila/LibreChat&type=Date&theme=dark" onerror="this.src='https://api.star-history.com/svg?repos=danny-avila/LibreChat&type=Date'" />
-  </a>
-</p>
-<p align="center">
-  <a href="https://trendshift.io/repositories/4685" target="_blank" style="padding: 10px;">
-    <img src="https://trendshift.io/api/badge/repositories/4685" alt="danny-avila%2FLibreChat | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
-  </a>
-  <a href="https://runacap.com/ross-index/q1-24/" target="_blank" rel="noopener" style="margin-left: 20px;">
-    <img style="width: 260px; height: 56px" src="https://runacap.com/wp-content/uploads/2024/04/ROSS_badge_white_Q1_2024.svg" alt="ROSS Index - Fastest Growing Open-Source Startups in Q1 2024 | Runa Capital" width="260" height="56"/>
-  </a>
-</p>
+- [client/src/components/Contacts/](client/src/components/Contacts/) — `ContactsPage`, list, detail, form, import modal, queries, api, types
+- [client/src/routes/index.tsx](client/src/routes/index.tsx) — adds the `/contacts` route
 
----
+**Wiring (modified)**
 
-## ✨ Contributions
-
-Contributions, suggestions, bug reports and fixes are welcome!
-
-For new features, components, or extensions, please open an issue and discuss before sending a PR.
-
-If you'd like to help translate LibreChat into your language, we'd love your contribution! Improving our translations not only makes LibreChat more accessible to users around the world but also enhances the overall user experience. Please check out our [Translation Guide](https://www.librechat.ai/docs/translation).
+- [api/models/index.js](api/models/index.js), [api/server/routes/index.js](api/server/routes/index.js), [api/server/index.js](api/server/index.js) — model + route registration
+- [api/app/clients/tools/index.js](api/app/clients/tools/index.js), [api/app/clients/tools/util/handleTools.js](api/app/clients/tools/util/handleTools.js), [api/app/clients/tools/manifest.json](api/app/clients/tools/manifest.json) — tool registry
+- [.env.example](.env.example) — adds `CONTACTS_IMPORT_BATCH_SIZE`, `CONTACTS_SEARCH_DEFAULT_LIMIT`
 
 ---
 
-## 💖 This project exists in its current state thanks to all the people who contribute
+## Quick start
 
-<a href="https://github.com/danny-avila/LibreChat/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=danny-avila/LibreChat" />
-</a>
+### Prerequisites
+
+- **Node.js** ≥ 20.19.0 (or ≥ 22.12.0)
+- **MongoDB** running locally or reachable via `MONGO_URI`
+- **Google AI API key** (provided in the assignment) for the chat assistant
+
+### Setup
+
+```bash
+# 1. Clone and install
+git clone <this-repo-url> LibreChat_Contact
+cd LibreChat_Contact
+npm install
+
+# 2. Configure environment
+cp .env.example .env
+# Edit .env:
+#   MONGO_URI=mongodb://localhost:27017/LibreChat
+#   GOOGLE_KEY=<assignment Google API key>
+
+# 3. Build shared packages (first run only)
+npm run build:data-provider
+npm run build:data-schemas
+npm run build:api
+npm run build:client-package
+```
+
+### Run (development)
+
+Two terminals:
+
+```bash
+# Terminal 1 — backend on http://localhost:3080
+npm run backend:dev
+
+# Terminal 2 — frontend (Vite + HMR) on http://localhost:3090
+npm run frontend:dev
+```
+
+Open **http://localhost:3090**, register an account, then visit **http://localhost:3090/contacts**.
+
+### Run (production build)
+
+```bash
+npm run frontend     # builds client + all packages sequentially
+npm run backend      # serves both API and built client on :3080
+```
 
 ---
 
-## 🎉 Special Thanks
+## Using the feature
 
-We thank [Locize](https://locize.com) for their translation management tools that support multiple languages in LibreChat.
+1. **Add a contact manually** — open `/contacts`, click **+ New contact**, fill core fields, add custom attributes (e.g. `Industry: AI Infrastructure`).
+2. **Bulk import** — click **Import CSV**, upload one of the assignment datasets:
+   - https://storage.googleapis.com/assignment-input-files-serri/chat_states_1k.csv
+   - https://storage.googleapis.com/assignment-input-files-serri/chat_states_10k.csv
+   - https://storage.googleapis.com/assignment-input-files-serri/chat_states_1M.csv
+3. **Create an Agent** with the **Contacts** tool enabled (Agent builder → Tools → `search_contacts`).
+4. **Chat with that Agent** and try queries like:
+   - *Who works at Acme Corp?*
+   - *List all CTOs in our contacts.*
+   - *Which contacts are interested in AI infrastructure?*
+   - *What do we know about Sarah Chen?*
 
-<p align="center">
-  <a href="https://locize.com" target="_blank" rel="noopener noreferrer">
-    <img src="https://github.com/user-attachments/assets/d6b70894-6064-475e-bb65-92a9e23e0077" alt="Locize Logo" height="50">
-  </a>
-</p>
+The assistant will invoke `search_contacts` automatically and answer using only the matched records.
+
+---
+
+## Architecture (short version)
+
+```
+Chat UI (React)  ──►  LibreChat backend (Express + Mongoose)
+   /contacts                │
+   page                     ├─ (a) UI  ──► /api/contacts CRUD + import
+                            └─ (b) Agent runtime ──► search_contacts tool
+                                                            │
+                                                            ▼
+                              MongoDB Contact collection
+                              (text index on searchText,
+                               compound index on user)
+```
+
+- **Why function calling, not prompt injection?** Sending all contacts into the prompt breaks token limits and degrades signal. The tool returns ≤ 20 relevant records — small, fast, scales to 1M rows.
+- **Arbitrary attributes** — stored as `Map<String, Mixed>` and flattened into a denormalized `searchText` field on save, so any attribute is searchable via the Mongo text index without a migration.
+- **Tenant isolation** — `searchForTool` requires a `userId` injected at tool construction; every Mongo query is scoped to that user.
+
+Full details, design tradeoffs, and answers to the design questions are in [CONTACTS_FEATURE.md](CONTACTS_FEATURE.md).
+
+---
+
+## Design questions (summary)
+
+> Full answers in [CONTACTS_FEATURE.md §6](CONTACTS_FEATURE.md).
+
+**Q1 — Scaling to 1M contacts.** Current code already streams imports and uses Mongo text indexes. For production: move free-text to Meilisearch/OpenSearch, add embeddings for hybrid retrieval, shard by `user`, push imports to a BullMQ queue, switch reads to cursor pagination + Redis cache.
+
+**Q2 — Most-relevant retrieval.** Today: structured filters (`company`, `role`, `attribute_key/value`) + free-text with Mongo scoring. Better: hybrid BM25 + embeddings fused with reciprocal rank fusion, then cross-encoder re-rank top 50 → top 10. Allow the model to issue multiple `search_contacts` calls and intersect results.
+
+**Q3 — Limitations.** Keyword-only search (no fuzzy/synonyms), in-process imports (no resumability), no deduplication on re-import, fixed result cap of 20 with no pagination, `notes` truncated to 2000 chars, no sidebar entry for the contacts page, no audit log of which contacts the assistant surfaced.
+
+---
+
+## REST endpoints
+
+All routes require a logged-in user (JWT cookie).
+
+| Method | Path                    | Description                              |
+|--------|-------------------------|------------------------------------------|
+| POST   | `/api/contacts`         | Create one contact                       |
+| GET    | `/api/contacts`         | List (`?page=&limit=&q=`)                |
+| GET    | `/api/contacts/:id`     | Fetch one                                |
+| PATCH  | `/api/contacts/:id`     | Update                                   |
+| DELETE | `/api/contacts/:id`     | Delete                                   |
+| POST   | `/api/contacts/import`  | Multipart CSV upload                     |
+| GET    | `/api/contacts/search`  | Filtered search (used by the LLM tool)   |
+
+---
+
+## Tech stack
+
+- **Backend** — Node.js, Express, Mongoose, Multer, LangChain Tool interface
+- **Frontend** — React 18, TypeScript, React Query, Tailwind, Vite
+- **Database** — MongoDB (text index + compound `(user, *)` indexes)
+- **LLM** — Google Gemini via LibreChat's existing Google provider (any provider with tool-calling will work)
+
+---
+
+## Acknowledgements
+
+Built on top of [LibreChat](https://github.com/danny-avila/LibreChat) by Danny Avila and contributors. The Contacts feature is the only addition in this fork; the rest of the application is upstream.
