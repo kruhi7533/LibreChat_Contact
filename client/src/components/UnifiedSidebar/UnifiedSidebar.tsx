@@ -1,5 +1,6 @@
 import { useCallback, useState, useEffect, useRef, memo, startTransition } from 'react';
 import type { ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useRecoilState } from 'recoil';
 import { useForm } from 'react-hook-form';
 import { useMediaQuery } from '@librechat/client';
@@ -41,8 +42,11 @@ function SidebarChatProvider({ children }: { children: ReactNode }) {
 
 function UnifiedSidebar() {
   const localize = useLocalize();
+  const location = useLocation();
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
-  const [expanded, setExpanded] = useRecoilState(store.sidebarExpanded);
+  const [storedExpanded, setExpanded] = useRecoilState(store.sidebarExpanded);
+  const forceCollapsed = location.pathname.startsWith('/contacts');
+  const expanded = forceCollapsed ? false : storedExpanded;
   const [sidebarWidth, setSidebarWidth] = useState(getInitialWidth);
   const [isResizing, setIsResizing] = useState(false);
   const resizeHandlers = useRef<{ move: (e: MouseEvent) => void; up: () => void } | null>(null);
