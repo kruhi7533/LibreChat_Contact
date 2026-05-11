@@ -166,5 +166,12 @@
         "optional": true
       }
     ]
+  },
+  {
+    "name": "Contacts",
+    "pluginKey": "search_contacts",
+    "description": "Search the user's personal Contacts workspace so the assistant can answer questions about saved people, companies, and roles.",
+    "icon": "assets/calculator.svg",
+    "authConfig": []
   }
 ]
