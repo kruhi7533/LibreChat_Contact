@@ -1,6 +1,5 @@
-import { Keyv } from 'keyv';
+import Keyv from 'keyv';
 import { logger } from '@librechat/data-schemas';
-import type { StoredDataNoRaw } from 'keyv';
 import type { FlowState, FlowMetadata, FlowManagerOptions } from './types';
 
 export const PENDING_STALE_MS = 2 * 60 * 1000;
@@ -361,9 +360,9 @@ export class FlowStateManager<T = unknown> {
   /**
    * Gets current flow state
    */
-  async getFlowState(flowId: string, type: string): Promise<StoredDataNoRaw<FlowState<T>> | null> {
+  async getFlowState(flowId: string, type: string): Promise<FlowState<T> | undefined> {
     const flowKey = this.getFlowKey(flowId, type);
-    return this.keyv.get(flowKey);
+    return (await this.keyv.get(flowKey)) as FlowState<T> | undefined;
   }
 
   /**
