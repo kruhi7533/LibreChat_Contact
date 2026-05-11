@@ -6,7 +6,7 @@
  */
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const KeyvRedis = require('@keyv/redis').default as typeof import('@keyv/redis').default;
-import { Keyv } from 'keyv';
+import Keyv from 'keyv';
 import createMemoryStore from 'memorystore';
 import { RedisStore } from 'rate-limit-redis';
 import { logger } from '@librechat/data-schemas';
