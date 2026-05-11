@@ -33,6 +33,7 @@ const {
   TavilySearchResults,
   createGeminiImageTool,
   createOpenAIImageTools,
+  SearchContacts,
 } = require('../');
 const { createMCPTool, createMCPTools, resolveConfigServers } = require('~/server/services/MCP');
 const { createFileSearchTool, primeFiles: primeSearchFiles } = require('./fileSearch');
@@ -178,6 +179,7 @@ const loadTools = async ({
     'azure-ai-search': StructuredACS,
     traversaal_search: TraversaalSearch,
     tavily_search_results_json: TavilySearchResults,
+    search_contacts: SearchContacts,
   };
 
   const customConstructors = {
