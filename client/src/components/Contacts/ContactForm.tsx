@@ -14,19 +14,44 @@ interface Props {
   onCancel: () => void;
 }
 
+const TAG_KEYS = new Set(['tags', 'Tags', 'TAGS']);
+
 const newRow = (): AttrRow => ({
   id: Math.random().toString(36).slice(2),
   key: '',
   value: '',
 });
 
+const parseTags = (raw: unknown): string[] => {
+  if (Array.isArray(raw)) {
+    return raw.map((t) => String(t).trim()).filter((t) => t.length > 0);
+  }
+  if (typeof raw === 'string') {
+    return raw
+      .split(',')
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0);
+  }
+  return [];
+};
+
+const extractTags = (attributes?: Record<string, unknown> | null): string[] => {
+  if (!attributes) return [];
+  for (const key of Object.keys(attributes)) {
+    if (TAG_KEYS.has(key)) return parseTags(attributes[key]);
+  }
+  return [];
+};
+
 const attributesToRows = (attributes?: Record<string, unknown> | null): AttrRow[] => {
   if (!attributes) return [];
-  return Object.entries(attributes).map(([k, v]) => ({
-    id: k,
-    key: k,
-    value: typeof v === 'object' ? JSON.stringify(v) : String(v ?? ''),
-  }));
+  return Object.entries(attributes)
+    .filter(([k]) => !TAG_KEYS.has(k))
+    .map(([k, v]) => ({
+      id: k,
+      key: k,
+      value: typeof v === 'object' ? JSON.stringify(v) : String(v ?? ''),
+    }));
 };
 
 const ContactForm: React.FC<Props> = ({ initial, onSubmit, onCancel, submitting }) => {
@@ -36,6 +61,8 @@ const ContactForm: React.FC<Props> = ({ initial, onSubmit, onCancel, submitting 
   const [email, setEmail] = useState(initial?.email ?? '');
   const [notes, setNotes] = useState(initial?.notes ?? '');
   const [rows, setRows] = useState<AttrRow[]>(attributesToRows(initial?.attributes));
+  const [tags, setTags] = useState<string[]>(extractTags(initial?.attributes));
+  const [tagDraft, setTagDraft] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,7 +72,29 @@ const ContactForm: React.FC<Props> = ({ initial, onSubmit, onCancel, submitting 
     setEmail(initial?.email ?? '');
     setNotes(initial?.notes ?? '');
     setRows(attributesToRows(initial?.attributes));
+    setTags(extractTags(initial?.attributes));
+    setTagDraft('');
   }, [initial?._id]);
+
+  const commitTagDraft = () => {
+    const next = tagDraft
+      .split(',')
+      .map((t) => t.trim())
+      .filter((t) => t.length > 0 && !tags.includes(t));
+    if (next.length) setTags((prev) => [...prev, ...next]);
+    setTagDraft('');
+  };
+
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      commitTagDraft();
+    } else if (e.key === 'Backspace' && tagDraft === '' && tags.length > 0) {
+      setTags((prev) => prev.slice(0, -1));
+    }
+  };
+
+  const removeTag = (t: string) => setTags((prev) => prev.filter((x) => x !== t));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,12 +103,20 @@ const ContactForm: React.FC<Props> = ({ initial, onSubmit, onCancel, submitting 
       setError('Name is required');
       return;
     }
-    const attributes: Record<string, string> = {};
+    const attributes: Record<string, unknown> = {};
     for (const r of rows) {
       const k = r.key.trim();
-      if (!k) continue;
+      if (!k || TAG_KEYS.has(k)) continue;
       attributes[k] = r.value;
     }
+    const finalTags = [
+      ...tags,
+      ...tagDraft
+        .split(',')
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0 && !tags.includes(t)),
+    ];
+    if (finalTags.length) attributes.tags = finalTags;
     try {
       await onSubmit({ name: name.trim(), company, role, email, notes, attributes });
     } catch (err) {
@@ -82,7 +139,11 @@ const ContactForm: React.FC<Props> = ({ initial, onSubmit, onCancel, submitting 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs font-medium text-text-secondary">Company</label>
-          <input className={inputCls} value={company} onChange={(e) => setCompany(e.target.value)} />
+          <input
+            className={inputCls}
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
+          />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-text-secondary">Role</label>
@@ -107,6 +168,46 @@ const ContactForm: React.FC<Props> = ({ initial, onSubmit, onCancel, submitting 
         />
       </div>
       <div>
+        <label className="mb-1 block text-xs font-medium text-text-secondary">Tags</label>
+        <div
+          className="flex flex-wrap gap-1.5 rounded-md border border-border-light bg-surface-primary px-2 py-1.5 focus-within:border-border-heavy"
+          onClick={(e) => {
+            const target = e.target as HTMLElement;
+            if (target.tagName !== 'INPUT') {
+              (e.currentTarget.querySelector('input') as HTMLInputElement | null)?.focus();
+            }
+          }}
+        >
+          {tags.map((t) => (
+            <span
+              key={t}
+              className="inline-flex items-center gap-1 rounded-full bg-blue-500/15 px-2 py-0.5 text-xs text-blue-500"
+            >
+              {t}
+              <button
+                type="button"
+                aria-label={`Remove tag ${t}`}
+                className="text-blue-500/70 hover:text-blue-500"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeTag(t);
+                }}
+              >
+                ✕
+              </button>
+            </span>
+          ))}
+          <input
+            className="min-w-[120px] flex-1 bg-transparent text-sm text-text-primary outline-none placeholder:text-text-secondary"
+            placeholder={tags.length === 0 ? 'Type a tag and press Enter or comma' : 'Add tag…'}
+            value={tagDraft}
+            onChange={(e) => setTagDraft(e.target.value)}
+            onKeyDown={handleTagKeyDown}
+            onBlur={commitTagDraft}
+          />
+        </div>
+      </div>
+      <div>
         <div className="mb-2 flex items-center justify-between">
           <label className="text-xs font-medium text-text-secondary">Custom attributes</label>
           <button
@@ -119,7 +220,7 @@ const ContactForm: React.FC<Props> = ({ initial, onSubmit, onCancel, submitting 
         </div>
         {rows.length === 0 && (
           <div className="text-xs text-text-secondary">
-            Add Industry, Location, Tags, or any other key-value pair.
+            Add Industry, Location, Funding Stage, or any other key-value pair.
           </div>
         )}
         <div className="space-y-2">
@@ -130,7 +231,9 @@ const ContactForm: React.FC<Props> = ({ initial, onSubmit, onCancel, submitting 
                 className={`${inputCls} max-w-[180px]`}
                 value={row.key}
                 onChange={(e) =>
-                  setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, key: e.target.value } : r)))
+                  setRows((prev) =>
+                    prev.map((r, idx) => (idx === i ? { ...r, key: e.target.value } : r)),
+                  )
                 }
               />
               <input
@@ -138,7 +241,9 @@ const ContactForm: React.FC<Props> = ({ initial, onSubmit, onCancel, submitting 
                 className={inputCls}
                 value={row.value}
                 onChange={(e) =>
-                  setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, value: e.target.value } : r)))
+                  setRows((prev) =>
+                    prev.map((r, idx) => (idx === i ? { ...r, value: e.target.value } : r)),
+                  )
                 }
               />
               <button

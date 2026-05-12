@@ -7,6 +7,21 @@ const { STANDARD_FIELDS } = require('./service');
 
 const DEFAULT_BATCH = Number(process.env.CONTACTS_IMPORT_BATCH_SIZE) || 1000;
 
+const NAME_PARTS = new Set(['first_name', 'middle_name', 'last_name']);
+
+const HEADER_ALIASES = new Map([
+  ['full_name', 'name'],
+  ['fullname', 'name'],
+  ['company_name', 'company'],
+  ['organization', 'company'],
+  ['organisation', 'company'],
+  ['employer', 'company'],
+  ['designation', 'role'],
+  ['title', 'role'],
+  ['job_title', 'role'],
+  ['position', 'role'],
+]);
+
 /**
  * Stream a CSV file into the Contact collection.
  *
@@ -95,18 +110,41 @@ const importCsv = async ({ userId, filePath, batchSize = DEFAULT_BATCH }) => {
 const rowToDoc = (userId, row) => {
   const standard = {};
   const attributes = {};
+  const nameParts = { first_name: '', middle_name: '', last_name: '' };
+
   for (const [rawKey, rawVal] of Object.entries(row)) {
     if (rawKey == null) continue;
     const key = rawKey.trim();
     if (!key) continue;
     const val = rawVal == null ? '' : String(rawVal).trim();
     const lower = key.toLowerCase();
-    if (STANDARD_FIELDS.has(lower)) {
-      standard[lower] = val;
-    } else if (val !== '') {
+
+    if (NAME_PARTS.has(lower)) {
+      nameParts[lower] = val;
+      continue;
+    }
+
+    const canonical = HEADER_ALIASES.get(lower) || lower;
+    if (STANDARD_FIELDS.has(canonical)) {
+      if (val !== '' && !standard[canonical]) {
+        standard[canonical] = val;
+      }
+      continue;
+    }
+
+    if (val !== '') {
       attributes[key] = val;
     }
   }
+
+  if (!standard.name) {
+    const composed = [nameParts.first_name, nameParts.middle_name, nameParts.last_name]
+      .filter((p) => p)
+      .join(' ')
+      .trim();
+    if (composed) standard.name = composed;
+  }
+
   if (!standard.name) {
     return null;
   }
@@ -125,4 +163,4 @@ const rowToDoc = (userId, row) => {
   return doc;
 };
 
-module.exports = { importCsv };
+module.exports = { importCsv, rowToDoc };

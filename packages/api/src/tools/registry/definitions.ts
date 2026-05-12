@@ -350,6 +350,47 @@ export const fileSearchSchema: ExtendedJsonSchema = {
   required: ['query'],
 };
 
+/** SearchContacts tool JSON schema */
+export const searchContactsSchema: ExtendedJsonSchema = {
+  type: 'object',
+  properties: {
+    query: {
+      type: 'string',
+      description:
+        'Free-text search across name, company, role, email, notes, and arbitrary attributes (Industry, Tags, Location, city, state, application_status, etc.).',
+    },
+    company: {
+      type: 'string',
+      description: 'Exact (case-insensitive) company filter, e.g. "Acme Corp".',
+    },
+    role: {
+      type: 'string',
+      description: 'Exact (case-insensitive) role filter, e.g. "CTO".',
+    },
+    email: {
+      type: 'string',
+      description: 'Exact email filter (case-insensitive).',
+    },
+    attribute_key: {
+      type: 'string',
+      description:
+        'Filter by an arbitrary attribute key. Common keys: "city", "state", "Industry", "application_status", "Tags". Must be paired with attribute_value.',
+    },
+    attribute_value: {
+      type: 'string',
+      description:
+        'Value to match against attribute_key (case-insensitive substring match). Required if attribute_key is set.',
+    },
+    limit: {
+      type: 'integer',
+      minimum: 1,
+      maximum: 50,
+      description: 'Maximum number of contacts to return. Default 20, capped at 50.',
+    },
+  },
+  required: [],
+};
+
 /** Tool definitions registry - maps tool names to their definitions */
 export const toolDefinitions: Record<string, ToolRegistryDefinition> = {
   google: {
@@ -414,6 +455,13 @@ export const toolDefinitions: Record<string, ToolRegistryDefinition> = {
     description:
       'A search engine optimized for comprehensive, accurate, and trusted results. Useful for when you need to answer questions about current events.',
     schema: tavilySearchSchema,
+    toolType: 'builtin',
+  },
+  search_contacts: {
+    name: 'search_contacts',
+    description:
+      'Search the user\'s personal contacts workspace. Use this whenever the user asks about people, companies, roles, locations, application status, or any saved contact information (e.g. "Who works at Acme?", "List CTOs", "What do we know about Sarah Chen?", "Find contacts in Mumbai"). Prefer narrow filters (company, role, attribute_key/value) over a broad query when possible. Returns at most 20 of the most relevant contacts.',
+    schema: searchContactsSchema,
     toolType: 'builtin',
   },
   file_search: {

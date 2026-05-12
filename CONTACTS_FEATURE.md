@@ -189,71 +189,86 @@ A second user logging in sees zero contacts until they create their own.
 
 ### Q1. If the system needed to support 1,000,000 contacts, how would you redesign it?
 
-The current implementation already handles 1M as a one-off load via
-streaming + batched `bulkWrite`. To make it production-grade at that
-scale I would:
+The current implementation already loads 1M rows via streaming +
+batched `bulkWrite` (constant memory, ~minutes per million). To make it
+production-grade at that scale:
 
-- **Search.** Move free-text search off Mongo `$text` into a dedicated
-  search engine — Meilisearch or OpenSearch — with synonyms, fuzzy
-  matching, and sub-100 ms latency. Keep Mongo authoritative for writes
-  and feed the engine via change streams.
+- **Imports → async job queue.** Today's `POST /api/contacts/import`
+  blocks one Node worker for the duration of the import. Move it to
+  BullMQ + Redis: the endpoint enqueues a job and returns `{ jobId }`,
+  the UI polls `/api/contacts/import/:jobId` for progress. Lets multiple
+  imports run in parallel and survives a worker restart.
+- **Search → dedicated engine.** Move free-text search off Mongo
+  `$text` into Meilisearch or OpenSearch — synonyms, real fuzzy match,
+  sub-100 ms latency. Keep Mongo authoritative; feed the engine from
+  change streams.
 - **Semantic retrieval.** Add an embedding column (Mongo Atlas Vector
-  Search or pgvector). Hybrid retrieval (BM25 + cosine) fused with
-  reciprocal rank fusion, then a cross-encoder re-ranker for the top 50
-  → top 10. This is what makes "interested in AI infrastructure"
-  reliably hit "AI/ML platform engineer" too.
+  Search or pgvector). Hybrid BM25 + cosine, fused with reciprocal rank
+  fusion, then a cross-encoder re-ranker for the top 50 → top 10. This
+  is what makes "interested in AI infrastructure" reliably hit "AI/ML
+  platform engineer" too.
 - **Sharding.** The collection is naturally user-partitioned. Shard by
   `user` so each tenant's working set is co-located.
-- **Imports.** Move the import endpoint from in-process to a queue
-  (BullMQ + Redis). The HTTP endpoint enqueues a job and returns a job
-  ID; the UI polls. This frees the API workers and lets multiple imports
-  run in parallel without head-of-line blocking.
-- **Reads.** Add Redis caching for hot list queries; switch to
-  cursor-based pagination (`createdAt + _id`) so deep pages don't pay
-  the `skip()` cost.
-- **Observability.** Per-user query histograms and slow-query logs so
-  regressions surface before users notice.
+- **Reads.** Redis cache for hot list queries; cursor-based pagination
+  (`createdAt + _id`) so deep pages don't pay the `skip()` cost.
+- **Observability.** Per-user query histograms and slow-query logs.
 
 ### Q2. How would you ensure the assistant retrieves the most relevant contacts for a query?
 
-- **Today.** `search_contacts` exposes structured filters (`company`,
-  `role`, `attribute_key/value`) and a free-text `query`. The model is
-  told in the description to prefer narrow filters when it can. Mongo
-  text scoring sorts the result.
-- **Better.** Hybrid retrieval with embeddings + BM25, fused with
-  reciprocal rank fusion, then re-ranked by a cross-encoder for the top
-  ~50 → top 10. Long-tail queries like "interested in payments
-  infrastructure" benefit most.
-- **Tool-loop.** Let the model issue multiple `search_contacts` calls
-  (decompose "CTOs at Stripe interested in AI" into a company filter
-  followed by an attribute filter, then intersect client-side). The
-  current implementation already supports multi-call agent loops because
-  the tool is stateless and idempotent.
-- **Feedback.** Log which tool calls produced answers the user accepted
-  vs. corrected, and use that signal to learn better filters.
+**What's built today (this fork):**
+
+1. **Tool-based retrieval — never context-stuffing.** `search_contacts`
+   is exposed via Gemini function calling. The model never sees the
+   contacts collection; it issues a query and gets ≤20 matched records
+   (cap 50). See `api/app/clients/tools/structured/SearchContacts.js`
+   and the runtime registry entry in
+   `packages/api/src/tools/registry/definitions.ts`.
+2. **Structured filters preferred over free-text.** The tool exposes
+   `company`, `role`, `email`, `attribute_key/value`, and `query`. The
+   tool description nudges the model to pick narrow filters first.
+3. **Exact → substring fallback.** `searchForTool` first tries strict
+   `^company$` regex; if 0 results, falls back to substring on the same
+   field (`service.js:193-202`). So "Tailor" still finds "Tailor-Bhasin".
+4. **"Did you mean…" suggestions.** When even the substring fallback
+   finds nothing, `getCompanySuggestions` (`service.js:223`) returns up
+   to 5 token-overlapping company names, and the tool's response
+   message tells Gemini to phrase a clarifying question rather than
+   silently returning empty.
+5. **Adaptive attribute pruning.** `computeRelevantAttrs` strips
+   irrelevant attributes from the result based on the tool call's
+   intent: free-text "tell me about X" queries get everything;
+   structured `company`/`attribute_key` queries get only core fields +
+   location/tag defaults + the queried attribute. Cuts tool-result size
+   ~60 % on filtered queries.
+6. **Mongo text index + score sort.** When the model passes `query`,
+   results sort by `$text` score before the cap is applied.
+
+**Next steps to improve further:**
+
+- **Embeddings.** Cosine similarity on a `searchText` embedding column
+  would catch synonyms and conceptual matches ("payments infra" → "fin
+  ops engineer") that keyword search misses.
+- **Multi-step tool loop.** Let the agent decompose "CTOs at Stripe
+  interested in AI" into a company filter call followed by an
+  attribute filter call. The tool is stateless and the agent loop
+  already supports this — just needs richer instructions.
+- **Relevance feedback.** Log which tool results led to user-accepted
+  answers vs. corrections, use to tune ranking.
 
 ### Q3. What are the limitations of your current implementation?
 
-- **Search is keyword-only.** Mongo `$text` has no fuzzy matching, no
-  synonyms, no semantic understanding. "AI" doesn't match "artificial
-  intelligence" unless that string is literally in `searchText`.
-- **CSV import is in-process.** The streaming + batched design keeps
-  memory flat, but a 1M-row import still ties up one Node worker for
-  several minutes. There's no resumability if the process restarts.
-- **No deduplication.** Importing the same CSV twice creates duplicate
-  contacts. Real systems would key on `(user, email)` or run a fuzzy
-  merge step.
-- **Tool returns 20 results, no pagination.** If the right answer is in
-  the 21st-best match, the model can't ask for "more". Practical for
-  most queries, brittle for power users.
-- **`notes` truncation.** The tool truncates `notes` to 2000 chars to
-  cap token usage. Long notes are silently clipped.
-- **No audit log.** We don't record which contacts the assistant
-  surfaced for which query — useful for compliance and for tuning the
-  retrieval layer.
-- **Surface area in the UI.** The page is reachable at `/contacts` but
-  there is no permanent sidebar entry. A discoverable button is a small
-  follow-up but adds churn to the unified-sidebar component.
+- **No semantic search.** Retrieval is keyword + substring fuzzy match
+  only. Conceptual queries like "AI infrastructure" only match contacts
+  where that exact phrase appears in `searchText`. Embedding-based
+  retrieval is the obvious next layer, and the 20-result cap matters
+  more without it.
+- **CSV import is in-process.** Streaming + batched `bulkWrite` keeps
+  memory flat, but a 1M-row import still occupies a Node worker for
+  several minutes with no resumability or progress events. A job queue
+  (BullMQ + Redis) is the natural fix.
+- **No deduplication.** Re-importing the same CSV creates duplicate
+  contacts. Production code would key on `(user, email)` or run a
+  fuzzy merge step.
 
 ---
 

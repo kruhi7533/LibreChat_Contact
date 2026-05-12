@@ -88,6 +88,19 @@ npm run backend:dev
 npm run frontend:dev
 ```
 
+### Run with Docker
+
+For a local containerized launch that builds the app from source and only
+starts the runtime services it needs:
+
+```bash
+docker compose -f docker-compose.local.yml up -d --build
+```
+
+If you want the full upstream Docker stack instead, use the existing
+`docker-compose.yml` or `deploy-compose.yml` files, but note those pull extra
+images and expect more environment variables.
+
 Open **http://localhost:3090**, register an account, then visit **http://localhost:3090/contacts**.
 
 ### Run (production build)
@@ -143,11 +156,11 @@ Full details, design tradeoffs, and answers to the design questions are in [CONT
 
 > Full answers in [CONTACTS_FEATURE.md §6](CONTACTS_FEATURE.md).
 
-**Q1 — Scaling to 1M contacts.** Current code already streams imports and uses Mongo text indexes. For production: move free-text to Meilisearch/OpenSearch, add embeddings for hybrid retrieval, shard by `user`, push imports to a BullMQ queue, switch reads to cursor pagination + Redis cache.
+**Q1 — Scaling to 1M contacts.** Current code already streams imports and uses Mongo text indexes. For production: move free-text search to Meilisearch/OpenSearch, add embeddings for hybrid retrieval, shard by `user`, push imports to a BullMQ + Redis job queue, and switch reads to cursor pagination + Redis cache.
 
-**Q2 — Most-relevant retrieval.** Today: structured filters (`company`, `role`, `attribute_key/value`) + free-text with Mongo scoring. Better: hybrid BM25 + embeddings fused with reciprocal rank fusion, then cross-encoder re-rank top 50 → top 10. Allow the model to issue multiple `search_contacts` calls and intersect results.
+**Q2 — Most-relevant retrieval.** The model never sees the full collection — `search_contacts` returns at most 20 records that match its structured filters (`company`, `role`, `attribute_key/value`) or free-text `query`. Built-in: exact → substring fuzzy fallback (so "Tailor" finds "Tailor-Bhasin"), "did you mean…" suggestions when nothing matches, and adaptive attribute pruning that cuts tool-result size ~60 % on filtered queries. Next layer: embedding-based semantic retrieval (hybrid BM25 + cosine, cross-encoder re-rank).
 
-**Q3 — Limitations.** Keyword-only search (no fuzzy/synonyms), in-process imports (no resumability), no deduplication on re-import, fixed result cap of 20 with no pagination, `notes` truncated to 2000 chars, no sidebar entry for the contacts page, no audit log of which contacts the assistant surfaced.
+**Q3 — Limitations.** (1) No semantic search — keyword + fuzzy substring only, so conceptual queries like "AI infrastructure" miss unless that phrase is literally indexed. (2) CSV import is in-process — constant memory thanks to streaming, but a 1M-row load occupies a Node worker for minutes with no resumability. (3) No deduplication on re-import.
 
 ---
 

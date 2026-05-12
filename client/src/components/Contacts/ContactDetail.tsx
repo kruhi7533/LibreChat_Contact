@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Contact, ContactInput } from './types';
 import ContactForm from './ContactForm';
 import { useDeleteContactMutation, useUpdateContactMutation } from './queries';
@@ -8,13 +9,33 @@ interface Props {
   onClose: () => void;
 }
 
+const TAG_KEYS = new Set(['tags', 'Tags', 'TAGS']);
+
+const parseTags = (raw: unknown): string[] => {
+  if (Array.isArray(raw)) return raw.map((t) => String(t).trim()).filter(Boolean);
+  if (typeof raw === 'string') {
+    return raw
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
 const ContactDetail: React.FC<Props> = ({ contact, onClose }) => {
+  const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const updateMutation = useUpdateContactMutation();
   const deleteMutation = useDeleteContactMutation();
 
   const attributes = contact.attributes || {};
-  const attrEntries = Object.entries(attributes);
+  const tags: string[] = (() => {
+    for (const k of Object.keys(attributes)) {
+      if (TAG_KEYS.has(k)) return parseTags(attributes[k]);
+    }
+    return [];
+  })();
+  const attrEntries = Object.entries(attributes).filter(([k]) => !TAG_KEYS.has(k));
 
   const handleUpdate = async (input: ContactInput) => {
     await updateMutation.mutateAsync({ id: contact._id, input });
@@ -25,6 +46,12 @@ const ContactDetail: React.FC<Props> = ({ contact, onClose }) => {
     if (!window.confirm(`Delete ${contact.name}?`)) return;
     await deleteMutation.mutateAsync(contact._id);
     onClose();
+  };
+
+  const handleAskAssistant = () => {
+    const subject = contact.company ? `${contact.name} from ${contact.company}` : contact.name;
+    const prompt = `What do we know about ${subject}?`;
+    navigate(`/c/new?prompt=${encodeURIComponent(prompt)}`);
   };
 
   if (editing) {
@@ -70,6 +97,21 @@ const ContactDetail: React.FC<Props> = ({ contact, onClose }) => {
           <div className="whitespace-pre-wrap text-sm text-text-primary">{contact.notes}</div>
         </div>
       )}
+      {tags.length > 0 && (
+        <div>
+          <div className="mb-1 text-xs uppercase tracking-wide text-text-secondary">Tags</div>
+          <div className="flex flex-wrap gap-1.5">
+            {tags.map((t) => (
+              <span
+                key={t}
+                className="inline-flex items-center rounded-full bg-blue-500/15 px-2 py-0.5 text-xs text-blue-500"
+              >
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
       {attrEntries.length > 0 && (
         <div>
           <div className="mb-1 text-xs uppercase tracking-wide text-text-secondary">
@@ -92,7 +134,7 @@ const ContactDetail: React.FC<Props> = ({ contact, onClose }) => {
           Created {new Date(contact.createdAt).toLocaleString()}
         </div>
       )}
-      <div className="flex justify-end gap-2 pt-2">
+      <div className="flex flex-wrap justify-end gap-2 pt-2">
         <button
           className="rounded-md border border-red-500 px-3 py-1.5 text-sm text-red-500 hover:bg-red-500/10"
           onClick={handleDelete}
@@ -105,6 +147,12 @@ const ContactDetail: React.FC<Props> = ({ contact, onClose }) => {
           onClick={() => setEditing(true)}
         >
           Edit
+        </button>
+        <button
+          className="rounded-md bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-600"
+          onClick={handleAskAssistant}
+        >
+          Ask AI
         </button>
       </div>
     </div>
