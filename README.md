@@ -97,6 +97,42 @@ npm run frontend     # builds client + all packages sequentially
 npm run backend      # serves both API and built client on :3080
 ```
 
+### Run with Docker
+
+Use the production compose file when you want a repeatable deployment that runs on any machine with Docker installed.
+
+1. Copy the environment file and fill in the required values:
+
+```bash
+cp .env.example .env
+```
+
+At minimum, set these values in `.env` before starting Docker:
+
+- `MEILI_MASTER_KEY`
+- `UID`
+- `GID`
+- `PORT` if you want something other than `3080`
+
+2. Start the stack with the production compose file:
+
+```bash
+docker compose -f deploy-compose.yml up -d --build
+```
+
+3. Open the app:
+
+- UI: `http://localhost`
+- API: `http://localhost:3080`
+
+If you prefer the non-production stack, you can also use:
+
+```bash
+docker compose up -d
+```
+
+If Docker reports TLS handshake or registry pull errors, re-run the command once your network is stable. The API image is built locally from `Dockerfile.multi`, which reduces reliance on the remote registry.
+
 ---
 
 ## Using the feature
